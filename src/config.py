@@ -17,7 +17,7 @@ class Config(object):
 
         self.block_size = 4
         self.chunk_size = 16
-        self.stripe_size = self.num_data_disk * self.chunk_size
+        self.stripe_size = self.num_data_disk * self.chunk_size #每个stripe写多少
         
         assert self.chunk_size % self.block_size == 0
 
@@ -35,4 +35,4 @@ class Config(object):
         test_dir = os.path.join(root, 'test '+time.strftime('%Y-%m-%d %H:%M:%S'))
         os.mkdir(test_dir)
         return test_dir
-        
+    
