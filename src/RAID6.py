@@ -46,7 +46,8 @@ class RAID6(object):
     
     def write_to_disk(self, filename, dir):
         data = self.distribute_data(filename)
-        parity_data = self.compute_parity(data)        
+        parity_data = self.compute_parity(data)   
+        print(parity_data.shape)     
         for i in range(self.config.num_disk):
             with open(os.path.join(dir, 'disk_{}'.format(i)), 'wb') as f:
                 f.write(parity_data[i,:])
