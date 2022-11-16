@@ -48,24 +48,43 @@ class RAID6(object):
         return np.concatenate([content,self.gf.matmul(self.gf.vander, content)],axis=0)
     def switch(self):
         pass
-    def chunk_save(self, data, dir):
-        for i in range(self.config.num_disk):
-            if os.path.exists(os.path.join(dir, 'disk_{}'.format(i))):
-                os.remove(os.path.join(dir, 'disk_{}'.format(i)))
-        i = 0        
-        while i < np.shape(data)[1]:
-            for j in range(np.shape(data)[0]):
-                disk_index=int((j+i/self.config.chunk_size)%self.config.num_disk)
-                with open(os.path.join(dir, 'disk_{}'.format(disk_index)), 'wb+') as f:
-                    f.write(data[j][i:i+self.config.chunk_size])
-            i=i+self.config.chunk_size
+    def transform_disk(self, data):
+        input_data=data
+        for i in range(np.shape(input_data)[0]):
+            input_data[i]=offset(input_data[i],i)
+        return input_data
+    
     def write_to_disk(self, filename, dir):
         data = self.distribute_data(filename)
         parity_data = self.compute_parity(data)        
-        self.chunk_save(parity_data, dir)
+        input_data = self.transform_disk(parity_data)
+        for i in range(self.config.num_disk):
+            with open(os.path.join(dir, 'disk_{}'.format(i)), 'wb') as f:
+                f.write(input_data[i])
         print("write data and parity to disk successfully\n")
 
     def fail_disk(self, dir, disk_number):
         os.remove(os.path.join(dir,"disk_{}".format(disk_number)))
         print("disk {} failed".format(disk_number))
     
+    def corrupt_disk(self, dir, disk_number):
+        file_name = os.path.join(dir,"disk_{}".format(disk_number))
+        with open(file_name, 'rb') as f:
+            content = list(f.read())  
+        print(len(content))
+        print(content[:10])
+
+    def detect_failure(self, dir):
+        number_of_failure = 0
+        for disk_number in range(self.config.num_disk):
+            file_name = os.path.join(dir,"disk_{}".format(disk_number))
+            if not os.path.exists(file_name):
+                number_of_failure += 1
+                print("detected disk {} failture".format(disk_number))
+                return
+        for disk_number in range(self.config.num_disk):
+            with open(file_name, 'rb') as f:
+                content = list(f.read())  
+            print(len(content))
+            print(content[:10])
+

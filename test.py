@@ -9,3 +9,4 @@ test=RAID6(cfg)
 filename='txt_test.txt'
 test.write_to_disk(os.path.join(DATA_PATH, filename), dir)
 test.fail_disk(dir, 0)
+test.corrupt_disk(dir, 1)
