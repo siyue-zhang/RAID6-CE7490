@@ -55,7 +55,7 @@ class RAID6(object):
         i = 0        
         while i < np.shape(data)[1]:
             for j in range(np.shape(data)[0]):
-                disk_index=int((j+i/self.config.chunk_size)%self.config.num_disk)
+                disk_index=int((j+i/self.config.chunk_size+2)%self.config.num_disk)
                 with open(os.path.join(dir, 'disk_{}'.format(disk_index)), 'wb+') as f:
                     f.write(data[j][i:i+self.config.chunk_size])
             i=i+self.config.chunk_size
