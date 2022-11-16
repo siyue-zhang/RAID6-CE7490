@@ -43,13 +43,25 @@ class RAID6(object):
     
     def compute_parity(self, content):
         return np.concatenate([content,self.gf.matmul(self.gf.vander, content)],axis=0)
-    
+    def switch(self):
+        pass
+    def transform_disk(self, data):
+        input_data=[]
+        data=data.T
+        length=int(data.shape[0]/self.config.num_disk)
+        for i in range(self.config.num_disk):
+            input_data.append(np.concatenate(data[i*length:(i+1)*length,:]))
+        return input_data
     def write_to_disk(self, filename, dir):
         data = self.distribute_data(filename)
-        parity_data = self.compute_parity(data)   
-        print(parity_data.shape)     
+        parity_data = self.compute_parity(data)        
+        input_data = self.transform_disk(parity_data)
         for i in range(self.config.num_disk):
             with open(os.path.join(dir, 'disk_{}'.format(i)), 'wb') as f:
-                f.write(parity_data[i,:])
+                f.write(input_data[i])
         print("write data and parity to disk successfully\n")
+
+    def fail_disk(self, dir, disk_number):
+        os.remove(os.path.join(dir,"disk_{}".format(disk_number)))
+        print("disk {} failed".format(disk_number))
     
