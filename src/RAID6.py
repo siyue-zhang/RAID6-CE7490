@@ -2,6 +2,9 @@ import os
 import numpy as np
 from src.GaloisField import GaloisField
 import math
+def offset(lst, offset):
+    lst=list(lst)
+    return np.asarray(lst[offset:] + lst[:offset])
 
 class RAID6(object):
     '''
@@ -46,12 +49,11 @@ class RAID6(object):
     def switch(self):
         pass
     def transform_disk(self, data):
-        input_data=[]
-        data=data.T
-        length=int(data.shape[0]/self.config.num_disk)
-        for i in range(self.config.num_disk):
-            input_data.append(np.concatenate(data[i*length:(i+1)*length,:]))
+        input_data=data
+        for i in range(np.shape(input_data)[0]):
+            input_data[i]=offset(input_data[i],i)
         return input_data
+    
     def write_to_disk(self, filename, dir):
         data = self.distribute_data(filename)
         parity_data = self.compute_parity(data)        
