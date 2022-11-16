@@ -48,18 +48,20 @@ class RAID6(object):
         return np.concatenate([content,self.gf.matmul(self.gf.vander, content)],axis=0)
     def switch(self):
         pass
-    def transform_disk(self, data):
-        input_data=data
-        for i in range(np.shape(input_data)[0]):
-            input_data[i]=offset(input_data[i],i)
-        return input_data
-    
+    def chunk_save(self, data, dir):
+        for i in range(self.config.num_disk):
+            if os.path.exists(os.path.join(dir, 'disk_{}'.format(i))):
+                os.remove(os.path.join(dir, 'disk_{}'.format(i)))
+        i = 0        
+        while i < np.shape(data)[1]:
+            for j in range(np.shape(data)[0]):
+                disk_index=int((j+i/self.config.chunk_size)%self.config.num_disk)
+                with open(os.path.join(dir, 'disk_{}'.format(disk_index)), 'wb+') as f:
+                    f.write(data[j][i:i+self.config.chunk_size])
+            i=i+self.config.chunk_size
     def write_to_disk(self, filename, dir):
         data = self.distribute_data(filename)
         parity_data = self.compute_parity(data)        
-        input_data = self.transform_disk(parity_data)
-        for i in range(self.config.num_disk):
-            with open(os.path.join(dir, 'disk_{}'.format(i)), 'wb') as f:
-                f.write(input_data[i])
+        self.chunk_save(parity_data, dir)
         print("write data and parity to disk successfully\n")
     
