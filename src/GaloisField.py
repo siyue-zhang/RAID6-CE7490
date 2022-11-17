@@ -116,6 +116,8 @@ class GaloisField(object):
     def gf_poly_scale(self,p,x):
         return  [self.gf_mul(i, x) for i in p] 
 
+    
+    
     def gf_inverse(self, A):
         """
         cal the left inverse matrix of A
@@ -135,12 +137,12 @@ class GaloisField(object):
                     if A_[k, i]:
                         break
                 A_[i, :] = list(map(self.add, A_[i, :], A_[k, :]))
-            A_[i, :] = list(map(self.div, A_[i, :], [A_[i, i]] * len(A_[i, :])))
+            A_[i, :] = list(map(self.gf_div, A_[i, :], [A_[i, i]] * len(A_[i, :])))
             for j in range(i+1, dim):
-                A_[j, :] = self.add(A_[j,:], list(map(self.mult, A_[i, :], [self.div(A_[j, i], A_[i, i])] * len(A_[i, :]))))
+                A_[j, :] = self.add(A_[j,:], list(map(self.gf_mul, A_[i, :], [self.gf_div(A_[j, i], A_[i, i])] * len(A_[i, :]))))
         for i in reversed(range(dim)):
             for j in range(i):
-                A_[j, :] = self.add(A_[j, :], list(map(self.mult, A_[i, :], [A_[j,i]] * len(A_[i,:]))))
+                A_[j, :] = self.add(A_[j, :], list(map(self.gf_mul, A_[i, :], [A_[j,i]] * len(A_[i,:]))))
         A_inverse = A_[:,dim:2*dim]
         if A.shape[0] != A.shape[1]:
             A_inverse = self.matmul(A_inverse, A_T)
