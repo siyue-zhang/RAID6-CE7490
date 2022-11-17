@@ -41,8 +41,10 @@ class RAID6(object):
         content = content + [0] * extra_stripe_size
         
         content = np.array(content)
-        #stripe_size=chunk_size*num_data_disk
+
         content = content.reshape(self.config.num_data_disk, self.config.chunk_size * total_stripe_number)
+
+        print(content)
 
         return content
     
@@ -64,8 +66,7 @@ class RAID6(object):
             i=i+self.config.chunk_size
         for i in range(self.config.num_disk):
             with open(os.path.join(dir, 'disk_{}'.format(i)), 'wb+') as f:
-                f.write(np.concatenate(data_list[i]))
-            print(np.concatenate(data_list[i]))
+                f.write(bytearray(list(np.concatenate(data_list[i]))))
             
     def write_to_disk(self, filename, dir):
         data = self.distribute_data(filename)
@@ -83,7 +84,7 @@ class RAID6(object):
             content = list(f.read())  
         content[0] = content[0]+1
         with open(file_name, 'wb+') as f:
-            f.write(content)
+            f.write(bytearray(content))
 
     def detect_failure(self, dir):
         for disk_number in range(self.config.num_disk):
@@ -94,7 +95,7 @@ class RAID6(object):
 
         file_list = []
         for i in range(self.config.num_disk):
-            file_name = os.path.join(dir,"disk_{}".format(disk_number))
+            file_name = os.path.join(dir,"disk_{}".format(i))
             with open(file_name, 'rb') as f:
                 content = list(f.read()) 
                 file_list.append(content)
@@ -106,8 +107,7 @@ class RAID6(object):
             for j in range(self.config.num_disk):
                 disk_index=int((j+i/self.config.chunk_size+2)%self.config.num_disk)
                 current_stripe.append(file_list[disk_index][chunk_number*self.config.chunk_size: (chunk_number+1)*self.config.chunk_size])
-            print(current_stripe)
-            parity_chunks = self.gf.matmul(self.gf.vander, np.array(current_stripe[:self.config.num_data_disk, :]))
+            parity_chunks = self.gf.matmul(self.gf.vander, np.array(current_stripe[:self.config.num_data_disk]))
             for i in range(self.config.num_check_disk):
                 if not (parity_chunks[i]==current_stripe[self.config.num_data_disk+i]).all:
                     number_of_failure += 1

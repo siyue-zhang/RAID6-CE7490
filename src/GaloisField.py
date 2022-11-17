@@ -122,7 +122,30 @@ class GaloisField(object):
         :param A: matrix
         :return: A^-1
         """
-        return self.gf_exp[255 - self.gf_log[A]]
+        if A.shape[0] != A.shape[1]:
+            A_T = np.transpose(A)
+            A_ = self.matmul(A_T, A)
+        else:
+            A_ = A
+        A_ = np.concatenate((A_, np.eye(A_.shape[0], dtype=int)), axis=1)
+        dim = A_.shape[0]
+        for i in range(dim):
+            if not A_[i, i]:
+                for k in range(i + 1, dim):
+                    if A_[k, i]:
+                        break
+                A_[i, :] = list(map(self.add, A_[i, :], A_[k, :]))
+            A_[i, :] = list(map(self.div, A_[i, :], [A_[i, i]] * len(A_[i, :])))
+            for j in range(i+1, dim):
+                A_[j, :] = self.add(A_[j,:], list(map(self.mult, A_[i, :], [self.div(A_[j, i], A_[i, i])] * len(A_[i, :]))))
+        for i in reversed(range(dim)):
+            for j in range(i):
+                A_[j, :] = self.add(A_[j, :], list(map(self.mult, A_[i, :], [A_[j,i]] * len(A_[i,:]))))
+        A_inverse = A_[:,dim:2*dim]
+        if A.shape[0] != A.shape[1]:
+            A_inverse = self.matmul(A_inverse, A_T)
+
+        return A_inverse
     
     def gf_poly_eval(self,p,x):
         y = p[0]
