@@ -116,8 +116,6 @@ class GaloisField(object):
     def gf_poly_scale(self,p,x):
         return  [self.gf_mul(i, x) for i in p] 
 
-    
-    
     def gf_inverse(self, A):
         """
         cal the left inverse matrix of A
