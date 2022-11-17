@@ -12,18 +12,26 @@ class RAID6(object):
     '''
     A class for RAID6 controller
     '''
-    def __init__(self, config):
+    def __init__(self, config, debug=True):
+        self.debug = debug
         self.config = config
         self.gf = GaloisField(num_data_disk = self.config.num_data_disk, num_check_disk= self.config.num_check_disk)
         self.data_disk_list  = list(range(self.config.num_data_disk))
         self.check_disk_list = list(range(self.config.num_data_disk,self.config.num_data_disk+self.config.num_check_disk))
-        print("RAID6 test begin, ready to store data\n")    
+        print("RAID6 test begin, ready to store data\n")  
+
     def read_data(self, filename, mode = 'rb'):
         '''
         read data according to row
         '''
         with open(filename, mode) as f:
-            return list(f.read())    
+            data = list(f.read())
+            if self.debug:
+                print(f"read {filename}")
+                print(data)
+                print('\n')
+            return data
+
     def distribute_data(self, filename):
         '''
         split data to different disk
@@ -31,34 +39,29 @@ class RAID6(object):
         :return: data array
         '''                
         content = self.read_data(filename) #读取file并且获得长度
-        
         file_size = len(content) #大小
-
         total_stripe_number = math.ceil(file_size / self.config.stripe_size) 
-
         extra_stripe_size = total_stripe_number * self.config.stripe_size - file_size
-        
         content = content + [0] * extra_stripe_size
-        
         content = np.array(content)
-
         content = content.reshape(self.config.num_data_disk, self.config.chunk_size * total_stripe_number)
-
-        print(content)
+        if self.debug:
+            print('file_size: ', file_size)
+            print(f'distribute data into {self.config.num_data_disk} disks {len(content)} x {len(content[0])}:')
+            print(content)
+            print('\n')
 
         return content
     
     def compute_parity(self, content):
         return np.concatenate([content,self.gf.matmul(self.gf.vander, content)],axis=0)
-    def switch(self):
-        pass
+
     def chunk_save(self, data, dir):
         for i in range(self.config.num_disk):
             if os.path.exists(os.path.join(dir, 'disk_{}'.format(i))):
                 os.remove(os.path.join(dir, 'disk_{}'.format(i)))
         i = 0        
         data_list=[[] for _ in range(self.config.num_disk)]
-        print(data)
         while i < np.shape(data)[1]:
             for j in range(np.shape(data)[0]):
                 disk_index=int((j+i/self.config.chunk_size+2)%self.config.num_disk)
