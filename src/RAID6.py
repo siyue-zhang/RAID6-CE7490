@@ -55,17 +55,17 @@ class RAID6(object):
             if os.path.exists(os.path.join(dir, 'disk_{}'.format(i))):
                 os.remove(os.path.join(dir, 'disk_{}'.format(i)))
         i = 0        
-        data_list=[[] for i in range(self.config.num_disk)]
+        data_list=[[] for _ in range(self.config.num_disk)]
+        print(data)
         while i < np.shape(data)[1]:
             for j in range(np.shape(data)[0]):
                 disk_index=int((j+i/self.config.chunk_size+2)%self.config.num_disk)
                 data_list[disk_index].append(data[j][i:i+self.config.chunk_size])
-#                with open(os.path.join(dir, 'disk_{}'.format(disk_index)), 'wb+') as f:
-#                    f.write(data[j][i:i+self.config.chunk_size])
             i=i+self.config.chunk_size
         for i in range(self.config.num_disk):
             with open(os.path.join(dir, 'disk_{}'.format(i)), 'wb+') as f:
                 f.write(np.concatenate(data_list[i]))
+            print(np.concatenate(data_list[i]))
             
     def write_to_disk(self, filename, dir):
         data = self.distribute_data(filename)
@@ -84,8 +84,6 @@ class RAID6(object):
         content[0] = content[0]+1
         with open(file_name, 'wb+') as f:
             f.write(content)
-        # print(len(content))
-        # print(content[:10])
 
     def detect_failure(self, dir):
         for disk_number in range(self.config.num_disk):
