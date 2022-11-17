@@ -40,10 +40,21 @@ class RAID6(object):
         '''                
         content = self.read_data(filename) #读取file并且获得长度
         file_size = len(content) #大小
-        total_stripe_number = math.ceil(file_size / self.config.stripe_size) 
-        extra_stripe_size = total_stripe_number * self.config.stripe_size - file_size
-        content = content + [0] * extra_stripe_size
-        content = np.array(content)
+        padding_content=[[] for _ in range(self.config.num_data_disk)]
+        
+        for i in range(math.ceil(file_size/self.config.chunk_size)):
+            padding_content[i%self.config.num_data_disk] = padding_content[i%self.config.num_data_disk] + list(content[i*self.config.chunk_size:min((i+1)*self.config.chunk_size,len(content))])
+        
+        total_stripe_number = math.ceil(file_size / self.config.stripe_size)
+        
+        for i in range(len(padding_content)):
+            if len(padding_content[i])<self.config.chunk_size *total_stripe_number:
+                padding_content[i] = list(padding_content[i]) + (self.config.chunk_size * total_stripe_number - len(padding_content[i])) * [0]
+        
+        padding_content = [np.array(tmp) for tmp in padding_content]
+        
+        content = np.concatenate(padding_content, axis=0)
+        
         content = content.reshape(self.config.num_data_disk, self.config.chunk_size * total_stripe_number)
         if self.debug:
             print('file_size: ', file_size)
