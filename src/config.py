@@ -1,5 +1,6 @@
 import time
 import os
+import shutil
 
 class Config(object):
     '''
@@ -15,11 +16,11 @@ class Config(object):
 
         assert self.num_disk == self.num_data_disk + self.num_check_disk
 
-        self.block_size = 4
+        # self.block_size = 4
         self.chunk_size = 16
         self.stripe_size = self.num_data_disk * self.chunk_size #每个stripe写多少
         
-        assert self.chunk_size % self.block_size == 0
+        # assert self.chunk_size % self.block_size == 0
 
         print("\nNum of Disk: %d" % self.num_disk)
         print("Num of Data Disk: %d" % self.num_data_disk)
@@ -27,12 +28,14 @@ class Config(object):
         print("\nRAID-6 configuration initialized\n")
         # input("Press Enter to continue ...\n")
     
-    def mkdisk(self, root):
+    def mkdisk(self, root, experiment_name):
         '''
         Make test directory for disk
         :return: dir
         '''
-        test_dir = os.path.join(root, 'test '+time.strftime('%Y-%m-%d %H:%M:%S'))
+        test_dir = os.path.join(root, f'storage_{experiment_name}')
+        if os.path.isdir(test_dir):
+            shutil.rmtree(test_dir)
         os.mkdir(test_dir)
         return test_dir
     

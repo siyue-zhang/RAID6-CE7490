@@ -19,13 +19,18 @@ class RAID6(object):
         self.data_disk_list  = list(range(self.config.num_data_disk))
         self.check_disk_list = list(range(self.config.num_data_disk,self.config.num_data_disk+self.config.num_check_disk))
         print("RAID6 test begin, ready to store data\n")  
-          
+
     def read_data(self, filename, mode = 'rb'):
         '''
         read data according to row
         '''
         with open(filename, mode) as f:
-            return list(f.read())    
+            data = list(f.read())
+            if self.debug:
+                print(f"read {filename}")
+                print(data)
+                print('\n')
+            return data
 
     def distribute_data(self, filename):
         '''
@@ -41,22 +46,22 @@ class RAID6(object):
         content = np.array(content)
         content = content.reshape(self.config.num_data_disk, self.config.chunk_size * total_stripe_number)
         if self.debug:
-            print('load original data:')
+            print('file_size: ', file_size)
+            print(f'distribute data into {self.config.num_data_disk} disks {len(content)} x {len(content[0])}:')
             print(content)
+            print('\n')
 
         return content
     
     def compute_parity(self, content):
         return np.concatenate([content,self.gf.matmul(self.gf.vander, content)],axis=0)
-    def switch(self):
-        pass
+
     def chunk_save(self, data, dir):
         for i in range(self.config.num_disk):
             if os.path.exists(os.path.join(dir, 'disk_{}'.format(i))):
                 os.remove(os.path.join(dir, 'disk_{}'.format(i)))
         i = 0        
         data_list=[[] for _ in range(self.config.num_disk)]
-        print(data)
         while i < np.shape(data)[1]:
             for j in range(np.shape(data)[0]):
                 disk_index=int((j+i/self.config.chunk_size+2)%self.config.num_disk)
