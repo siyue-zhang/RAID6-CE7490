@@ -12,18 +12,21 @@ class RAID6(object):
     '''
     A class for RAID6 controller
     '''
-    def __init__(self, config):
+    def __init__(self, config, debug=True):
+        self.debug = debug
         self.config = config
         self.gf = GaloisField(num_data_disk = self.config.num_data_disk, num_check_disk= self.config.num_check_disk)
         self.data_disk_list  = list(range(self.config.num_data_disk))
         self.check_disk_list = list(range(self.config.num_data_disk,self.config.num_data_disk+self.config.num_check_disk))
-        print("RAID6 test begin, ready to store data\n")    
+        print("RAID6 test begin, ready to store data\n")  
+          
     def read_data(self, filename, mode = 'rb'):
         '''
         read data according to row
         '''
         with open(filename, mode) as f:
             return list(f.read())    
+
     def distribute_data(self, filename):
         '''
         split data to different disk
@@ -31,20 +34,15 @@ class RAID6(object):
         :return: data array
         '''                
         content = self.read_data(filename) #读取file并且获得长度
-        
         file_size = len(content) #大小
-
         total_stripe_number = math.ceil(file_size / self.config.stripe_size) 
-
         extra_stripe_size = total_stripe_number * self.config.stripe_size - file_size
-        
         content = content + [0] * extra_stripe_size
-        
         content = np.array(content)
-
         content = content.reshape(self.config.num_data_disk, self.config.chunk_size * total_stripe_number)
-
-        print(content)
+        if self.debug:
+            print('load original data:')
+            print(content)
 
         return content
     
