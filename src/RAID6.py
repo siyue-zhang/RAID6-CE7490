@@ -101,7 +101,7 @@ class RAID6(object):
                 disk_index=int((j+i/self.config.chunk_size+2)%self.config.num_disk)
                 current_stripe.append(file_list[disk_index][chunk_number*self.config.chunk_size: (chunk_number+1)*self.config.chunk_size])
             print(current_stripe)
-            parity_chunks = self.gf.matmul(self.gf.vander, np.array(current_stripe[:self.config.num_data_disk, :]))
+            parity_chunks = self.gf.matmul(self.gf.vander, np.array(current_stripe[:self.config.num_data_disk]))
             for i in range(self.config.num_check_disk):
                 if not (parity_chunks[i]==current_stripe[self.config.num_data_disk+i]).all:
                     number_of_failure += 1
