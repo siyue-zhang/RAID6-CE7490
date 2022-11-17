@@ -2,6 +2,8 @@ import os
 import numpy as np
 from src.GaloisField import GaloisField
 import math
+from os.path import join, getsize
+
 def offset(lst, offset):
     lst=list(lst)
     return np.asarray(lst[offset:] + lst[:offset])
@@ -27,9 +29,9 @@ class RAID6(object):
         split data to different disk
         :param filename:
         :return: data array
-        '''
+        '''                
         content = self.read_data(filename) #读取file并且获得长度
-
+        
         file_size = len(content) #大小
 
         total_stripe_number = math.ceil(file_size / self.config.stripe_size) 
@@ -53,12 +55,18 @@ class RAID6(object):
             if os.path.exists(os.path.join(dir, 'disk_{}'.format(i))):
                 os.remove(os.path.join(dir, 'disk_{}'.format(i)))
         i = 0        
+        data_list=[[] for i in range(self.config.num_disk)]
         while i < np.shape(data)[1]:
             for j in range(np.shape(data)[0]):
                 disk_index=int((j+i/self.config.chunk_size+2)%self.config.num_disk)
-                with open(os.path.join(dir, 'disk_{}'.format(disk_index)), 'wb+') as f:
-                    f.write(data[j][i:i+self.config.chunk_size])
+                data_list[disk_index].append(data[j][i:i+self.config.chunk_size])
+#                with open(os.path.join(dir, 'disk_{}'.format(disk_index)), 'wb+') as f:
+#                    f.write(data[j][i:i+self.config.chunk_size])
             i=i+self.config.chunk_size
+        for i in range(self.config.num_disk):
+            with open(os.path.join(dir, 'disk_{}'.format(i)), 'wb+') as f:
+                f.write(np.concatenate(data_list[i]))
+            
     def write_to_disk(self, filename, dir):
         data = self.distribute_data(filename)
         parity_data = self.compute_parity(data)        
