@@ -222,7 +222,7 @@ class RAID6(object):
         for d in os.listdir(dir):
             all_disks[int(d.split("_")[-1])]=self.read_data(dir+'/'+d)
 
-        # print(all_disks[0])
+        print("show disk 0 data: \n",all_disks[0])
         n_chunks = int(len(all_disks[0])/self.config.chunk_size)
 
         parity_start_disk=0
