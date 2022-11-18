@@ -20,21 +20,23 @@ print(test.read_data(dir+f'/disk_{tt}'))
 
 #------------------------ Update()
 
-#------------------------ Fail()
-test.fail_disk(dir, 4)
-test.fail_disk(dir, 5)
-T_failure_start = time.time()
+# #------------------------ Fail()
+# test.fail_disk(dir, 4)
+# test.fail_disk(dir, 5)
+# T_failure_start = time.time()
 
-#------------------------ Detect()
-fail_ids = test.detect_failure(dir)
+# #------------------------ Detect()
+# fail_ids = test.detect_failure(dir)
 
-#------------------------ Rebuild()
-test.rebuild(dir, fail_ids)
-T_rebuild_finish = time.time()
-print(f"Rebuild Time: {T_rebuild_finish-T_failure_start} seconds.")
+# #------------------------ Rebuild()
+# test.rebuild(dir, fail_ids)
+# T_rebuild_finish = time.time()
+# print(f"Rebuild Time: {T_rebuild_finish-T_failure_start} seconds.")
 
-# tmp=test.read_data(f'./storage_rebuild/disk_{tt}')
-# print(tmp, len(tmp))
+# # tmp=test.read_data(f'./storage_rebuild/disk_{tt}')
+# # print(tmp, len(tmp))
 
 #------------------------ Retrieve()
+
+test.retrieve('./storage_default')
 

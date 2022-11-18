@@ -210,3 +210,42 @@ class RAID6(object):
         self.chunk_save(parity_data_restore, dir_rebuild)
 
         return
+
+    def retrieve(self, dir):
+        
+        fail_ids = self.detect_failure(dir)
+        if len(fail_ids)>0:
+            raise Exception("Sorry, storage disks are damaged.")
+
+        chunks_restore = []
+        all_disks = defaultdict(lambda: None)
+        for d in os.listdir(dir):
+            all_disks[int(d.split("_")[-1])]=self.read_data(dir+'/'+d)
+
+        # print(all_disks[0])
+        n_chunks = int(len(all_disks[0])/self.config.chunk_size)
+
+        parity_start_disk=0
+        remove_parity = []
+        for i in range(n_chunks):
+            parity_disks=np.arange(parity_start_disk, parity_start_disk+self.config.num_check_disk)
+            parity_disks=[p%self.config.num_disk for p in parity_disks]
+
+            remove_parity_chunk = []
+            for j in range(self.config.num_disk):
+                if j not in parity_disks:
+                   remove_parity_chunk.append(all_disks[j][i*self.config.chunk_size:(i+1)*self.config.chunk_size]) 
+            remove_parity.append(remove_parity_chunk)
+            parity_start_disk += 1
+
+        data_retrieve = []
+        for h in range(n_chunks):
+            for v in range(self.config.num_data_disk):
+                data_retrieve.extend(remove_parity[h][v])
+        data_retrieve = [ x for x in data_retrieve if x!=0]
+        # print(data_retrieve)
+
+        np.savetxt('data_retrieved.txt', data_retrieve)
+
+        return data_retrieve
+
