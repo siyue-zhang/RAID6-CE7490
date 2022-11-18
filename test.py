@@ -7,7 +7,7 @@ import numpy as np
 
 tt=0
 
-# Store()
+#------------------------ Store()
 cfg = Config()
 dir=cfg.mkdisk('./','default')
 test=RAID6(cfg,True)
@@ -18,17 +18,17 @@ print(test.read_data(dir+f'/disk_{tt}'))
 # for i in range(8):
 #     test.read_data(dir+f'/disk_{i}')
 
-# Update()
+#------------------------ Update()
 
-# Fail()
+#------------------------ Fail()
 test.fail_disk(dir, 4)
 test.fail_disk(dir, 5)
 T_failure_start = time.time()
 
-# Detect()
+#------------------------ Detect()
 fail_ids = test.detect_failure(dir)
 
-# Rebuild()
+#------------------------ Rebuild()
 test.rebuild(dir, fail_ids)
 T_rebuild_finish = time.time()
 print(f"Rebuild Time: {T_rebuild_finish-T_failure_start} seconds.")
@@ -36,5 +36,5 @@ print(f"Rebuild Time: {T_rebuild_finish-T_failure_start} seconds.")
 # tmp=test.read_data(f'./storage_rebuild/disk_{tt}')
 # print(tmp, len(tmp))
 
-# Retrieve()
+#------------------------ Retrieve()
 
