@@ -24,7 +24,6 @@ class GaloisField(object):
                 b ^= self.prime    
         for i in range(255, 512):
             self.gf_exp[i] = self.gf_exp[i - 255]
-
     def init_vander(self):
         '''
         Set up the Vandermond matrix

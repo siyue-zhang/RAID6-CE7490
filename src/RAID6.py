@@ -72,19 +72,27 @@ class RAID6(object):
             if os.path.exists(os.path.join(dir, 'disk_{}'.format(i))):
                 os.remove(os.path.join(dir, 'disk_{}'.format(i)))
         i = 0        
+
         data_list=[[] for _ in range(self.config.num_disk)]
         while i < np.shape(data)[1]:
             for j in range(np.shape(data)[0]):
-                disk_index=int((j+i/self.config.chunk_size+2)%self.config.num_disk)
-                data_list[disk_index].append(data[j][i:i+self.config.chunk_size])
-            i=i+self.config.chunk_size
+                if j < i/self.config.chunk_size:
+                    disk_index = j                     
+                elif self.config.num_data_disk > j >= i/self.config.chunk_size:
+                    disk_index = j + 2                    
+                elif j>=self.config.num_data_disk:
+                    disk_index = int(i/self.config.chunk_size+j-self.config.num_data_disk)                               
+                data_list[disk_index].append(data[j][i:i+self.config.chunk_size])                        
+            i=i+self.config.chunk_size        
         for i in range(self.config.num_disk):
+            print(data_list[i])
             with open(os.path.join(dir, 'disk_{}'.format(i)), 'wb+') as f:
                 f.write(bytearray(list(np.concatenate(data_list[i]))))
             
     def write_to_disk(self, filename, dir):
         data = self.distribute_data(filename)
         parity_data = self.compute_parity(data)        
+        #print(parity_data)
         self.chunk_save(parity_data, dir)
         print("write data and parity to disk successfully\n")
 
