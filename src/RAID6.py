@@ -62,9 +62,6 @@ class RAID6(object):
             print(f'distribute data into {self.config.num_data_disk} disks {len(content)} x {len(content[0])}:')
             print(content)
             print('\n')
-        print('ssss')
-        for x in content:
-            print(x)
         return content
     
     def compute_parity(self, content):
@@ -92,7 +89,6 @@ class RAID6(object):
                 data_list[disk_index].append(data[j][i:i+self.config.chunk_size])                        
             i=i+self.config.chunk_size        
         for i in range(self.config.num_disk):
-            print(data_list[i])
             with open(os.path.join(dir, 'disk_{}'.format(i)), 'wb+') as f:
                 f.write(bytearray(list(np.concatenate(data_list[i]))))
             
@@ -155,8 +151,6 @@ class RAID6(object):
         all_disks = defaultdict(lambda: None)
         for d in os.listdir(dir):
             all_disks[int(d.split("_")[-1])]=self.read_data(dir+'/'+d)
-        print('all')
-        print(all_disks[0])
         assert(len(all_disks[list(all_disks.keys())[0]])%self.config.chunk_size==0)
         n_chunks = int(len(all_disks[0])/self.config.chunk_size)
 
@@ -165,7 +159,6 @@ class RAID6(object):
             parity_disks=np.arange(parity_start_disk, parity_start_disk+self.config.num_check_disk)
             parity_disks=[p%self.config.num_disk for p in parity_disks]
 
-            print('aaa',parity_disks)
             F = self.gf.vander
             I = np.identity(self.config.num_data_disk)
             A = np.concatenate((I,F))
@@ -194,10 +187,7 @@ class RAID6(object):
                     remian_rows.append(parity_row)
                 parity_row+=1
 
-            print("E",'\n',E_remove)
             A_remove = A[remian_rows,:]
-            print("inv")
-            print(A_remove)
             A_r_inv = self.gf.gf_inverse(np.array(A_remove,dtype=int))
             D = self.gf.matmul(A_r_inv,np.array(E_remove,dtype=int))
             chunks_restore.append(D.tolist())
@@ -208,9 +198,6 @@ class RAID6(object):
         for c in range(n_chunks):
             for l in range(self.config.num_data_disk):
                 data_restore[l].extend(chunks_restore[c][l])
-
-        for x in data_restore:
-            print(x)
 
         parity_data_restore = self.compute_parity(np.array(data_restore))
         dir_rebuild=self.config.mkdisk('./','rebuild')      
@@ -229,7 +216,7 @@ class RAID6(object):
         for d in os.listdir(dir):
             all_disks[int(d.split("_")[-1])]=self.read_data(dir+'/'+d)
 
-        print("show disk 0 data: \n",all_disks[0])
+        # print("show disk 0 data: \n",all_disks[0])
         n_chunks = int(len(all_disks[0])/self.config.chunk_size)
 
         parity_start_disk=0

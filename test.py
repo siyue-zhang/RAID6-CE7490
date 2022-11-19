@@ -5,38 +5,59 @@ from data import DATA_PATH
 import time
 import numpy as np
 
-tt=0
-
+check=True
 #------------------------ Store()
+T_write_start = time.time()
 cfg = Config()
 dir=cfg.mkdisk('./','default')
-test=RAID6(cfg,True)
+test=RAID6(cfg,False)
 filename='test_small.txt'
 test.write_to_disk(os.path.join(DATA_PATH, filename), dir)
-print('DISK0')
-print(test.read_data(dir+f'/disk_{tt}'))
-# for i in range(8):
-#     test.read_data(dir+f'/disk_{i}')
 
+if check:
+    print("original disks:")
+    for i in range(8):
+        print(test.read_data(dir+f'/disk_{i}'))
+    print('\n')
+T_write_end = time.time()
 #------------------------ Update()
 
-# #------------------------ Fail()
-# test.fail_disk(dir, 4)
-# test.fail_disk(dir, 5)
-# T_failure_start = time.time()
+#------------------------ Fail()
+test.fail_disk(dir, 4)
+test.fail_disk(dir, 5)
 
-# #------------------------ Detect()
-# fail_ids = test.detect_failure(dir)
+#------------------------ Detect()
+fail_ids = test.detect_failure(dir)
 
-# #------------------------ Rebuild()
-# test.rebuild(dir, fail_ids)
-# T_rebuild_finish = time.time()
-# print(f"Rebuild Time: {T_rebuild_finish-T_failure_start} seconds.")
+#------------------------ Rebuild()
+T_rebuild_start = time.time()
+test.rebuild(dir, fail_ids)
+T_rebuild_end = time.time()
 
-# # tmp=test.read_data(f'./storage_rebuild/disk_{tt}')
-# # print(tmp, len(tmp))
+if check:
+    print('\n')
+    print("restored disks:")
+    for i in range(8):
+        tmp=test.read_data(f'./storage_rebuild/disk_{i}')
+        print(tmp)
+    print('\n')
 
 #------------------------ Retrieve()
+T_read_start = time.time()
+restored_data = test.retrieve('./storage_rebuild')
+T_read_end = time.time()
+if check:
+    print("restored data object:")
+    print(restored_data)
+    print('\n')
 
-test.retrieve('./storage_default')
+#---------------------------
+read_time = T_read_end-T_read_start
+write_time = T_write_end-T_write_start
+rebuild_time = T_rebuild_end-T_rebuild_start
+
+print(f"read time: {read_time} seconds")
+print(f"write time: {write_time} seconds")
+print(f"rebuild time: {rebuild_time} seconds")
+
 
