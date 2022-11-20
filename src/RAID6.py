@@ -75,19 +75,46 @@ class RAID6(object):
         for i in range(self.config.num_disk):
             if os.path.exists(os.path.join(dir, 'disk_{}'.format(i))):
                 os.remove(os.path.join(dir, 'disk_{}'.format(i)))
-        i = 0        
+        # i = 0        
 
+        # data_list=[[] for _ in range(self.config.num_disk)]
+        # while i < np.shape(data)[1]:
+        #     for j in range(np.shape(data)[0]):
+        #         if j < i/self.config.chunk_size:
+        #             disk_index = j                     
+        #         elif self.config.num_data_disk > j >= i/self.config.chunk_size:
+        #             disk_index = j + 2                    
+        #         elif j>=self.config.num_data_disk:
+        #             disk_index = int(i/self.config.chunk_size+j-self.config.num_data_disk)    
+        #             print(disk_index)                           
+        #         data_list[disk_index].append(data[j][i:i+self.config.chunk_size])                        
+        #     i=i+self.config.chunk_size
+
+        i = 0        
+        parity_start_disk=0
+        parity_row=self.config.num_data_disk
+        data_row=0
         data_list=[[] for _ in range(self.config.num_disk)]
         while i < np.shape(data)[1]:
+            parity_disks=np.arange(parity_start_disk, parity_start_disk+self.config.num_check_disk)
+            parity_disks=[p%self.config.num_disk for p in parity_disks]
+
+            if parity_row>=self.config.num_disk:
+                parity_row=self.config.num_data_disk
+            if data_row>=self.config.num_data_disk:
+                data_row=0
+
             for j in range(np.shape(data)[0]):
-                if j < i/self.config.chunk_size:
-                    disk_index = j                     
-                elif self.config.num_data_disk > j >= i/self.config.chunk_size:
-                    disk_index = j + 2                    
-                elif j>=self.config.num_data_disk:
-                    disk_index = int(i/self.config.chunk_size+j-self.config.num_data_disk)                               
-                data_list[disk_index].append(data[j][i:i+self.config.chunk_size])                        
-            i=i+self.config.chunk_size        
+                if j in parity_disks:
+                    data_list[j].append(data[parity_row][i:i+self.config.chunk_size])  
+                    parity_row+=1
+                else:
+                    data_list[j].append(data[data_row][i:i+self.config.chunk_size])  
+                    data_row+=1
+
+            i=i+self.config.chunk_size
+            parity_start_disk+=1
+
         for i in range(self.config.num_disk):
             with open(os.path.join(dir, 'disk_{}'.format(i)), 'wb+') as f:
                 f.write(bytearray(list(np.concatenate(data_list[i]))))
