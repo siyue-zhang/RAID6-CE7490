@@ -4,10 +4,11 @@ import shutil
 
 class Config(object):
     '''
-    setup configuration of RAID6 controller
-    :param num_disk: total disk count
-    :param num_data_disk:  disk for data storage
-    :param num_check_disk: disk for parity storage
+    RAID6 initialization configuration
+    Args:
+        num_disk: total disk count
+        num_data_disk: disk for data storage
+        num_check_disk: disk for parity storage
     '''
     def __init__(self):
         self.num_disk = 8
@@ -16,22 +17,19 @@ class Config(object):
 
         assert self.num_disk == self.num_data_disk + self.num_check_disk
 
-        # self.block_size = 4
-        self.chunk_size = 16
-        self.stripe_size = self.num_data_disk * self.chunk_size #每个stripe写多少
+        self.chunk_size = 256
+        self.stripe_size = self.num_data_disk * self.chunk_size
         
-        # assert self.chunk_size % self.block_size == 0
-
         print("\nNum of Disk: %d" % self.num_disk)
         print("Num of Data Disk: %d" % self.num_data_disk)
         print("Num of Checksum: %d" % self.num_check_disk)
-        print("\nRAID-6 configuration initialized\n")
-        # input("Press Enter to continue ...\n")
+        print("RAID-6 configuration initialized\n")
     
     def mkdisk(self, root, experiment_name):
         '''
         Make test directory for disk
-        :return: dir
+        return: 
+            test_dir: test folder directory
         '''
         test_dir = os.path.join(root, f'storage_{experiment_name}')
         if os.path.isdir(test_dir):

@@ -4,7 +4,7 @@ class GaloisField(object):
     def __init__(self, num_data_disk, num_check_disk):
         self.num_data_disk = num_data_disk
         self.num_check_disk = num_check_disk
-        self.prime = 0b100011101 #本源多项式
+        self.prime = 0b100011101 # modulo
         self.gf_exp = [0] * 512 
         self.gf_log = [0] * 256
         self.vander = np.zeros((self.num_check_disk, self.num_data_disk), dtype=int)
@@ -48,8 +48,9 @@ class GaloisField(object):
     def gf_mul(self, a, b):
         '''
         Multiplication in Galosis Field
-        :param a: multiplicand
-        :param b: multiplier
+        Args:
+            a: multiplicand
+            b: multiplier
         '''
         if a == 0 or b == 0:
             return 0         
@@ -58,8 +59,9 @@ class GaloisField(object):
     def gf_div(self, a, b):
         '''
         Division in Galosis Field
-        :param a: dividend
-        :param b: divisor
+        Args:
+            a: dividend
+            b: divisor
         '''
         if a == 0:
             return 0
@@ -71,15 +73,16 @@ class GaloisField(object):
     def gf_power(self, a, n):
         '''
         Exponentiation in Galosis Field
-        :param a: base
-        :param n: exponent
+        Args:
+            a: base
+            n: exponent
         '''
         return self.gf_exp[(self.gf_log[a] * n) % 255]
   
     def dot(self, a, b):
         '''
         Inner product of vector
-        :return: c
+        Return: c
         '''
         res = 0
         for i in range(len(a)):
@@ -89,7 +92,7 @@ class GaloisField(object):
     def matmul(self, a, b):
         '''
         Matrix multiplication
-        :return: mat res
+        Return: mat res
         '''
         res = np.zeros([a.shape[0], b.shape[1]], dtype=int)
         for i in range(res.shape[0]):
@@ -118,8 +121,10 @@ class GaloisField(object):
     def gf_inverse(self, A):
         """
         cal the left inverse matrix of A
-        :param A: matrix
-        :return: A^-1
+        Args:
+            A: matrix
+        Return: 
+            A^-1
         """
         if A.shape[0] != A.shape[1]:
             A_T = np.transpose(A)

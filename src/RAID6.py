@@ -5,13 +5,13 @@ import math
 from os.path import join, getsize
 from collections import defaultdict
 
-def offset(lst, offset):
-    lst=list(lst)
-    return np.asarray(lst[offset:] + lst[:offset])
 
 class RAID6(object):
     '''
-    A class for RAID6 controller
+    A class for RAID6 system
+    Args:
+        config: Config class object as configuration parameter
+        debug (boolean): if the intermediate result is printed
     '''
     def __init__(self, config, debug=True):
         self.debug = debug
@@ -19,11 +19,15 @@ class RAID6(object):
         self.gf = GaloisField(num_data_disk = self.config.num_data_disk, num_check_disk= self.config.num_check_disk)
         self.data_disk_list  = list(range(self.config.num_data_disk))
         self.check_disk_list = list(range(self.config.num_data_disk,self.config.num_data_disk+self.config.num_check_disk))
-        print("RAID6 test begin, ready to store data\n")  
+        print("RAID6 setup ready, ready to store data\n")  
 
     def read_data(self, filename, mode = 'rb'):
         '''
-        read data according to row
+        Read data in the file
+        Args:
+            filename (str): name of the file
+        Return:
+            data (list)
         '''
         with open(filename, mode) as f:
             data = list(f.read())
@@ -35,12 +39,14 @@ class RAID6(object):
 
     def distribute_data(self, filename):
         '''
-        split data to different disk
-        :param filename:
-        :return: data array
+        Split data in strips to different disks
+        Args:
+            filename (str): name of the file
+        Return: 
+            content: data array
         '''                
-        content = self.read_data(filename) #读取file并且获得长度
-        file_size = len(content) #大小
+        content = self.read_data(filename)
+        file_size = len(content)
         padding_content=[[] for _ in range(self.config.num_data_disk)]
         
         for i in range(math.ceil(file_size/self.config.chunk_size)):
@@ -65,6 +71,13 @@ class RAID6(object):
         return content
     
     def compute_parity(self, content):
+        '''
+        Compute and append rows of parity data
+        Args:
+            content: raw data array
+        Return: 
+            data: array with raw data and parity data
+        ''' 
         data = np.concatenate([content,self.gf.matmul(self.gf.vander, content)],axis=0)
         if self.debug:
             print("with parity: ")
@@ -72,6 +85,12 @@ class RAID6(object):
         return data
 
     def chunk_save(self, data, dir):
+        '''
+        Distribute raw data and parity data evenly into different disks, then write into a file per disk
+        Args:
+            data: array with raw data and parity data
+            dir: disk save directory
+        ''' 
         for i in range(self.config.num_disk):
             if os.path.exists(os.path.join(dir, 'disk_{}'.format(i))):
                 os.remove(os.path.join(dir, 'disk_{}'.format(i)))
@@ -104,11 +123,12 @@ class RAID6(object):
             if data_row>=self.config.num_data_disk:
                 data_row=0
 
+            for p in parity_disks:
+                data_list[p].append(data[parity_row][i:i+self.config.chunk_size])
+                parity_row+=1
+
             for j in range(np.shape(data)[0]):
-                if j in parity_disks:
-                    data_list[j].append(data[parity_row][i:i+self.config.chunk_size])  
-                    parity_row+=1
-                else:
+                if j not in parity_disks:
                     data_list[j].append(data[data_row][i:i+self.config.chunk_size])  
                     data_row+=1
 
@@ -126,10 +146,12 @@ class RAID6(object):
         print("write data and parity to disk successfully\n")
 
     def fail_disk(self, dir, disk_number):
+        # introduce disk failure by deleting the disk file
         os.remove(os.path.join(dir,"disk_{}".format(disk_number)))
         print("disk {} failed".format(disk_number))
     
     def corrupt_disk(self, dir, disk_number):
+        # introduce disk failure by mistaking parity data
         file_name = os.path.join(dir,"disk_{}".format(disk_number))
         with open(file_name, 'rb') as f:
             content = list(f.read())  
@@ -138,6 +160,7 @@ class RAID6(object):
             f.write(bytearray(content))
 
     def detect_failure(self, dir):
+        # detect which disk is corrupted 
         fail_ids = []
         for disk_number in range(self.config.num_disk):
             file_name = os.path.join(dir,"disk_{}".format(disk_number))
@@ -169,6 +192,12 @@ class RAID6(object):
         #     chunk_number += 1
 
     def rebuild(self, dir, fail_ids):
+        '''
+        Compute original data array by matrix inversion after removing corrupted rows
+        Args:
+            dir (str): input disk directory
+            fail_ids (list): detected id of failed disks
+        ''' 
         n = len(fail_ids)
         if n > self.config.num_check_disk:
             print("\n","ERROR: too many failed disks.", "\n")
@@ -225,15 +254,20 @@ class RAID6(object):
         for c in range(n_chunks):
             for l in range(self.config.num_data_disk):
                 data_restore[l].extend(chunks_restore[c][l])
-
+        
         parity_data_restore = self.compute_parity(np.array(data_restore))
+        # print(parity_data_restore[:,7*16:8*16])
         dir_rebuild=self.config.mkdisk('./','rebuild')      
         self.chunk_save(parity_data_restore, dir_rebuild)
 
         return
 
     def retrieve(self, dir):
-        
+        '''
+        Remove parity data and ensamble data strips for original data object
+        Args:
+            dir (str): disk directory
+        ''' 
         fail_ids = self.detect_failure(dir)
         if len(fail_ids)>0:
             raise Exception("Sorry, storage disks are damaged.")
@@ -262,11 +296,20 @@ class RAID6(object):
         data_retrieve = []
         for h in range(n_chunks):
             for v in range(self.config.num_data_disk):
-                data_retrieve.extend(remove_parity[h][v])
-        data_retrieve = [ x for x in data_retrieve if x!=0]
-        # print(data_retrieve)
+                arr = remove_parity[h][v]
+                # remove the padding in the tail
+                while len(arr)>0 and arr[-1] == 0:
+                    arr.pop(-1)
+                data_retrieve.extend(arr)
 
-        np.savetxt('data_retrieved.txt', data_retrieve)
+        data_retrieve = str(bytearray(data_retrieve))
+        
+        #open text file
+        text_file = open("data_retrieved.txt", "w")        
+        #write string to file
+        text_file.write(data_retrieve)
+        #close file
+        text_file.close()
 
         return data_retrieve
 
