@@ -36,7 +36,7 @@ User can change system configuration parameters in ```config.py```, add any data
 │   └── ...  
 ├── images                   # Images for report
 ├── test.py                  # Test experiment code
-├── data_retrieved.txt       # Retrieved data object from storage disks
+├── data_retrieved           # Retrieved data object from storage disks
 └── README.md
 ```
 

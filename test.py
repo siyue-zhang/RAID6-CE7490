@@ -16,10 +16,11 @@ cfg = Config()
 dir=cfg.mkdisk('./','default')
 test=RAID6(cfg,False)
 
-## 3 sizes of files for testing
+## different test files
 # filename = 'test_small.txt' # 104 bytes
 # filename = 'shakespeare_small.txt' # 1145 bytes
-filename = 'shakespeare.txt' # 5,458,199 bytes
+# filename = 'shakespeare.txt' # 5,458,199 bytes
+filename = 'img_test.png' # 1.4MB
 
 test.write_to_disk(os.path.join(DATA_PATH, filename), dir)
 
