@@ -37,3 +37,11 @@ In this project, we developed the RAID-6 system based on the most popular Vander
 ├── data_retrieved.txt       # Retrieved data object from storage disks
 └── README.md
 ```
+
+# Running Experiments
+
+
+```
+python test.py 
+```
+
