@@ -8,6 +8,8 @@ RAID 6, also known as double-parity RAID (redundant array of independent disks),
 
 In this project, we developed the RAID-6 system based on the most popular Vandermonde-RS code using ```Python 3.7``` and the ```numpy``` library. Galois Field and matrix operations were employed in the development. Six major functions were programmed for distributing data storage, updating modified data, detecting disk failure, restoring corrupted data, and retrieving data objects respectively.
 
+![](.\images\system.png)
+
 # Folder Structure
 
 ```
@@ -27,6 +29,7 @@ In this project, we developed the RAID-6 system based on the most popular Vander
 │   ├── disk_0
 │   ├── disk_1
 │   └── ...  
+├── images                   # Images for report
 ├── test.py                  # Test experiment code
 ├── data_retrieved.txt       # Retrieved data object from storage disks
 └── README.md
