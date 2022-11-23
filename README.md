@@ -15,6 +15,8 @@ In this project, we developed the RAID-6 system based on the most popular Vander
 
 # Folder Structure
 
+User can change system configuration parameters in ```config.py```, add any data object in ```data``` folder.
+
 ```
 .
 ├── data                    # Data objects for experiment
@@ -40,6 +42,7 @@ In this project, we developed the RAID-6 system based on the most popular Vander
 
 # Running Experiments
 
+To run the test code:
 
 ```
 python test.py 
