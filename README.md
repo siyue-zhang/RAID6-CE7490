@@ -15,7 +15,7 @@ In this project, we developed the RAID-6 system based on the most popular Vander
 
 # Folder Structure
 
-User can change system configuration parameters in ```config.py```, add any data object in ```data``` folder.
+User can change system configuration parameters in ```config.py```, add any data object in ```data``` folder, and start experimenting using ```test.py```.
 
 ```
 .
@@ -42,9 +42,15 @@ User can change system configuration parameters in ```config.py```, add any data
 
 # Running Experiments
 
-To run the test code:
+To run the test code for the above workflow including 6 major functions:
 
 ```
 python test.py 
 ```
 
+Storage performance results are like follows:
+```
+read time: 0.08199000358581543 seconds
+write time: 3.647477149963379 seconds
+rebuild time: 8.104788064956665 seconds
+```
