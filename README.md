@@ -12,6 +12,7 @@
 
 # Folder Structure
 
+```
 .
 ├── data                    # Data objects for experiment
 │   ├── shakespeare.txt
@@ -31,3 +32,4 @@
 ├── test.py                  # Test experiment code
 ├── data_retrieved.txt       # Retrieved data object from storage disks
 └── README.md
+```
